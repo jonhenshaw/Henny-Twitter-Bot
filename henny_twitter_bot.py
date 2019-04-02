@@ -1,15 +1,16 @@
 import tweepy
+import config
 import random
-import keys
 
-print('\n\n\n\n\nHENNY TROLL BOT ACTIVATED\n\n\n\n\n')
+print('\n\n\n\n\nHENNY TWITTER BOT ACTIVATED\n\n\n\n\n')
 
-"""@TheDJHenny"""
-CONSUMER_KEY = 'pG0jjsVnstfvpBCmmGHwoJdGX'
-CONSUMER_SECRET = 'QSJbayNasYQIYjCCM79e1OaL5EhsOu7IoNh4b70GyBk9AXMxW1'
-ACCESS_KEY = '46678381-QrZvRR2RIoRJVZfYTPEiMHiZ8w7OaQy4w1jn9TUxp'
-ACCESS_SECRET = 'ju4GtOOrbYica0bN3ls1h7SuFV2Pks0QYXgBcLIdA9TyQ'
+# @TheDJHenny tokens
+CONSUMER_KEY = config.CONSUMER_KEY
+CONSUMER_SECRET = config.CONSUMER_SECRET
+ACCESS_KEY = config.ACCESS_KEY
+ACCESS_SECRET = config.ACCESS_SECRET
 
+# Twitter authorization
 auth = tweepy.OAuthHandler(CONSUMER_KEY,CONSUMER_SECRET)
 auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
 api = tweepy.API(auth,wait_on_rate_limit = True)
@@ -18,6 +19,7 @@ api = tweepy.API(auth,wait_on_rate_limit = True)
 
 FILE_NAME = 'last_seen_id.txt'
 
+# Methods for updating the last seen tweet to prevent duplicate posts
 def retrieve_last_seen_id(file_name):
 	f_read = open(file_name, 'r')
 	last_seen_id = int(f_read.read().strip())
@@ -30,32 +32,49 @@ def store_last_seen_id(last_seen_id, file_name):
 	f_write.close()
 	return
 
+# Prevents sending too many requests to Twitter's servers
+def limit_handled(cursor):
+    while True:
+        try:
+            yield cursor.next()
+        except tweepy.RateLimitError:
+            time.sleep(15 * 60)
+
 last_seen_id = retrieve_last_seen_id(FILE_NAME)
 
 
-"""Create list of insults"""
-shit_talk_list = []
-shit_talk_list.append("lol what do you know about henny???")
-shit_talk_list.append("I bet you've never had a sip of henny in your life LOL")
-shit_talk_list.append("My mom could out drink you hahahaha")
-shit_talk_list.append("In Soviet Russia, henny drinks YOU!")
-shit_talk_list.append("Sounds like you need a crash course on how to drink henny like a MAN")
+# Create list of tweets
+tweet_list = []
+tweet_list.append("Follow me for a free bottle of henny! Hit my DMs!")
+tweet_list.append("Want a free bottle of henny?? Follow my account and shoot me a DM!")
+tweet_list.append("Free bottle of henny to the next 50 people that follow me!")
 
-"""Search Twitter for tweets including keyword"""
-results = api.search(q="#henny",count=10000,
+# Search Twitter for tweets including keyword
+results = limit_handled(tweepy.Cursor(api.search,q="#henny",count=10000,
                            lang="en",
-                           since_id=2019-31-1)
+                           since_id=last_seen_id,tweet_mode='extended').items())
 
+# Loops through resulting tweets
 for result in results:
-	"""insult = random.choice(shit_talk_list)"""
-	insult = shit_talk_list[0]
-	print("HENNY SHIT TALK INITIATED")
-	print("@" + result.user.screen_name + ": '" + result.text + "'")
-	print("@TheDJHenny: '@" + result.user.screen_name + " " + insult + "'\n")
-	"""last_seen_id = result.id"""
+	
+
+	tweet = random.choice(tweet_list)
+	
+	#Prints 
+	print(result.id)
+	print("HENNY BOT INITIATED")
+
+	# Posts resulting tweets and shows what the bot will tweet
+	print("@" + result.user.screen_name + ": '" + result.full_text + "'")
+	print("@TheDJHenny: '@" + result.user.screen_name + " " + tweet + "'\n")
+	
+	# Updated last_seen_id to prevent responding to the same tweet
+	last_seen_id = result.id
 	store_last_seen_id(last_seen_id, FILE_NAME)
-	"""api.update_status('@' + result.user.screen_name + 
-							" " + random.choice(shit_talk_list), result.id)"""
+	
+	# Posts Tweet
+	api.update_status('@' + result.user.screen_name + 
+							" " + random.choice(tweet_list), result.id)
 
 
 						
