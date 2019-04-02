@@ -50,31 +50,38 @@ tweet_list.append("Want a free bottle of henny?? Follow my account and shoot me 
 tweet_list.append("Free bottle of henny to the next 50 people that follow me!")
 
 # Search Twitter for tweets including keyword
-results = limit_handled(tweepy.Cursor(api.search,q="#henny",count=10000,
+search_results = api.search(q="#henny",count=10000,
                            lang="en",
-                           since_id=last_seen_id,tweet_mode='extended').items())
+                           since_id=last_seen_id,tweet_mode='extended')
 
-# Loops through resulting tweets
-for result in results:
+def respond_to_search(search_results, tweet_list):
 	
+	# Loops through resulting tweets
+	for result in reversed(search_results):
+		
+		# Chooses random tweet from list
+		tweet = random.choice(tweet_list)
+		
+		# Prints 
+		print(result.id)
+		print("HENNY BOT INITIATED")
 
-	tweet = random.choice(tweet_list)
-	
-	#Prints 
-	print(result.id)
-	print("HENNY BOT INITIATED")
+		# Posts resulting tweets and shows what the bot will tweet
+		print("@" + result.user.screen_name + ": '" + result.full_text + "'")
+		print("@TheDJHenny: '@" + result.user.screen_name + " " + tweet + "'\n")
+		
+		# Updated last_seen_id to prevent responding to the same tweet
+		last_seen_id = result.id
+		store_last_seen_id(last_seen_id, FILE_NAME)
+		
+		# Posts Tweet
+		api.update_status('@' + result.user.screen_name + 
+	 						" " + random.choice(tweet_list), result.id)
 
-	# Posts resulting tweets and shows what the bot will tweet
-	print("@" + result.user.screen_name + ": '" + result.full_text + "'")
-	print("@TheDJHenny: '@" + result.user.screen_name + " " + tweet + "'\n")
-	
-	# Updated last_seen_id to prevent responding to the same tweet
-	last_seen_id = result.id
-	store_last_seen_id(last_seen_id, FILE_NAME)
-	
-	# Posts Tweet
-	api.update_status('@' + result.user.screen_name + 
-							" " + random.choice(tweet_list), result.id)
+	return None
+
+# Runs function
+respond_to_search(search_results, tweet_list)
 
 
 						
